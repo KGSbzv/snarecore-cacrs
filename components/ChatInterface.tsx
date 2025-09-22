@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { ChatInput } from './common/ChatInput';
 import { ChatBubble } from './common/ChatBubble';
@@ -8,12 +8,15 @@ import type { Message, MessageFile } from '../types';
 import { FileDownIcon } from './icons/FileDownIcon';
 import { AIError } from '../types';
 import { ChevronDownIcon } from './icons/ChevronDownIcon';
+import { SearchIcon } from './icons/SearchIcon';
+import { XIcon } from './icons/XIcon';
 
 export const ChatInterface: React.FC = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
     const { aiConfig } = useAppContext();
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const exportMenuRef = useRef<HTMLDivElement>(null);
@@ -23,8 +26,10 @@ export const ChatInterface: React.FC = () => {
     };
 
     useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+        if (!searchQuery) {
+            scrollToBottom();
+        }
+    }, [messages, searchQuery]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -38,9 +43,19 @@ export const ChatInterface: React.FC = () => {
         };
     }, []);
 
+    const filteredMessages = useMemo(() => {
+        if (!searchQuery.trim()) {
+            return messages;
+        }
+        return messages.filter(msg =>
+            msg.text.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [messages, searchQuery]);
+
     const handleSendMessage = async (text: string, file?: File) => {
         if (!text.trim() && !file) return;
 
+        setSearchQuery(''); // Clear search on new message
         setError(null);
         setIsLoading(true);
         
@@ -84,8 +99,30 @@ export const ChatInterface: React.FC = () => {
 
     return (
         <div className="flex flex-col h-full bg-transparent">
-             <div className="flex-shrink-0 p-4 border-b border-border flex justify-between items-center">
-                <h2 className="text-lg font-semibold">Conversation</h2>
+             <div className="flex-shrink-0 p-4 border-b border-border flex justify-between items-center gap-4">
+                <h2 className="text-lg font-semibold whitespace-nowrap">Conversation</h2>
+
+                 <div className="relative flex-1 max-w-sm">
+                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" />
+                    <input
+                        type="text"
+                        placeholder="Search messages..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-background border border-border rounded-md pl-9 pr-8 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                        aria-label="Search messages"
+                    />
+                    {searchQuery && (
+                        <button
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary hover:text-white"
+                            aria-label="Clear search"
+                        >
+                            <XIcon className="w-4 h-4" />
+                        </button>
+                    )}
+                </div>
+
                 <div className="relative" ref={exportMenuRef}>
                     <button
                         onClick={() => setIsExportMenuOpen(prev => !prev)}
@@ -127,13 +164,19 @@ export const ChatInterface: React.FC = () => {
                         <p>Start a conversation by sending a message.</p>
                     </div>
                 )}
-                {messages.map((msg, index) => (
+                {filteredMessages.map((msg) => (
                     <ChatBubble
                         key={msg.id}
                         message={msg}
-                        isLoading={isLoading && index === messages.length - 1 && msg.sender === 'model'}
+                        isLoading={isLoading && messages.length > 0 && msg.id === messages[messages.length - 1].id}
+                        highlight={searchQuery}
                     />
                 ))}
+                {messages.length > 0 && filteredMessages.length === 0 && (
+                     <div className="text-center text-gray-500 pt-10">
+                        <p>No messages found for "{searchQuery}".</p>
+                    </div>
+                )}
                 <div ref={messagesEndRef} />
             </div>
             {error && (

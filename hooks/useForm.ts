@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, ChangeEvent } from 'react';
 
 // A generic validation function type that returns a partial record of errors.
 export type Validator<T> = (values: T) => Partial<Record<keyof T, string>>;
@@ -24,7 +24,8 @@ export const useForm = <T extends Record<string, any>>(
     }
   }, [values, validator, isDirty]);
   
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  // FIX: Replaced `React.ChangeEvent` with the imported `ChangeEvent` type to resolve namespace error.
+  const handleChange = useCallback((e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     
     const processedValue = type === 'checkbox'

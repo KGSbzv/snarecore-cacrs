@@ -2,16 +2,41 @@ import React from 'react';
 import type { Message } from '../../types';
 import { FileTextIcon } from '../icons/FileTextIcon';
 
-const renderFormattedText = (text: string) => {
-  const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const renderFormattedText = (text: string, highlight?: string) => {
+  const highlightTerm = highlight?.trim();
+
+  // This function will process a chunk of text for markdown.
+  const processMarkdown = (part: string, keyPrefix: string) => {
+    // Return early if part is empty
+    if (!part) return null;
+
+    const markdownParts = part.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+    return markdownParts.map((mdPart, mdIndex) => {
+      if (mdPart.startsWith('**') && mdPart.endsWith('**')) {
+        return <strong key={`${keyPrefix}-${mdIndex}`}>{mdPart.slice(2, -2)}</strong>;
+      }
+      if (mdPart.startsWith('*') && mdPart.endsWith('*')) {
+        return <em key={`${keyPrefix}-${mdIndex}`}>{mdPart.slice(1, -1)}</em>;
+      }
+      return mdPart;
+    });
+  };
+
+  if (!highlightTerm) {
+    return processMarkdown(text, 'md');
+  }
+
+  const regex = new RegExp(`(${escapeRegExp(highlightTerm)})`, 'gi');
+  const parts = text.split(regex);
+
   return parts.map((part, index) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    if (part.toLowerCase() === highlightTerm.toLowerCase()) {
+      return <mark key={`highlight-${index}`} className="bg-yellow-500/70 text-white rounded px-0.5">{part}</mark>;
     }
-    if (part.startsWith('*') && part.endsWith('*')) {
-      return <em key={index}>{part.slice(1, -1)}</em>;
-    }
-    return part;
+    // For non-highlighted parts, process them for markdown
+    return processMarkdown(part, `part-${index}`);
   });
 };
 
@@ -24,7 +49,7 @@ const TypingIndicator: React.FC = () => (
 );
 
 
-export const ChatBubble: React.FC<{ message: Message; isLoading?: boolean }> = ({ message, isLoading }) => {
+export const ChatBubble: React.FC<{ message: Message; isLoading?: boolean; highlight?: string }> = ({ message, isLoading, highlight }) => {
   const isUser = message.sender === 'user';
   return (
     <div className={`flex items-start gap-3 ${isUser ? 'justify-end' : ''}`}>
@@ -42,7 +67,7 @@ export const ChatBubble: React.FC<{ message: Message; isLoading?: boolean }> = (
         {isLoading && message.sender === 'model' && !message.text ? (
             <TypingIndicator />
         ) : (
-            <div className="text-sm">{renderFormattedText(message.text)}</div>
+            <div className="text-sm">{renderFormattedText(message.text, highlight)}</div>
         )}
         
         {message.file && (

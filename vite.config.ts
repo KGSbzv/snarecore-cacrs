@@ -1,10 +1,11 @@
+/// <reference types="node" />
+
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
-// FIX: Explicitly import 'process' to provide correct types for `process.cwd()`
-// and resolve "Property 'cwd' does not exist on type 'Process'" error.
-import process from 'process';
 import svgr from 'vite-plugin-svgr';
+// FIX: Explicitly import process to make Node.js types available for `process.cwd()`.
+import process from 'process';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
