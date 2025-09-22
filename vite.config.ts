@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => {
   // The third parameter '' makes it load all env vars, not just VITE_ prefixed ones.
   const env = loadEnv(mode, process.cwd(), '');
   
+  // Explicitly read the PORT from the environment for server configuration.
+  const port = Number(process.env.PORT) || 8080;
+
   return {
     plugins: [
       react(),
@@ -29,9 +32,13 @@ export default defineConfig(({ mode }) => {
     define: {
       'process.env.VITE_API_BASE_URL': JSON.stringify(env.VITE_API_BASE_URL),
     },
+    server: {
+      host: '0.0.0.0', // Listen on all network interfaces
+      port: port,
+    },
     preview: {
       host: '0.0.0.0', // Ensure the server is accessible within the container network.
-      port: Number(process.env.PORT) || 8080 // Respect the PORT env var from the deployment environment.
+      port: port // Respect the PORT env var from the deployment environment.
     }
   }
 })
