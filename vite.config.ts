@@ -27,8 +27,11 @@ export default defineConfig(({ mode }) => {
     // Make process.env variables available in client-side code.
     // This is crucial for fixing crashes caused by accessing environment variables.
     define: {
-      'process.env.API_KEY': JSON.stringify(env.API_KEY),
       'process.env.VITE_API_BASE_URL': JSON.stringify(env.VITE_API_BASE_URL),
+    },
+    preview: {
+      host: '0.0.0.0', // Ensure the server is accessible within the container network.
+      port: Number(process.env.PORT) || 8080 // Respect the PORT env var from the deployment environment.
     }
   }
 })
