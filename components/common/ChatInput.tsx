@@ -18,8 +18,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+    const isSendDisabled = isLoading || (!text.trim() && !file);
+
     const handleSend = () => {
-        if (isLoading || (!text.trim() && !file)) return;
+        if (isSendDisabled) return;
         onSendMessage(text, file || undefined);
         setText('');
         setFile(null);
@@ -93,7 +95,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }
                 <div className="absolute right-4 top-1/2 -translate-y-1/2">
                     <button
                         onClick={handleSend}
-                        disabled={isLoading || (!text.trim() && !file)}
+                        disabled={isSendDisabled}
                         className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed"
                         aria-label="Send message"
                     >
