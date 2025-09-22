@@ -4,6 +4,51 @@ const API_BASE_URL = process.env.VITE_API_BASE_URL || '';
 const TOKEN_KEY = 'authToken';
 
 /**
+ * Creates a specific AIError instance from an HTTP response.
+ * This centralizes error message generation for different status codes.
+ * @param response The failed fetch response.
+ * @returns A promise that resolves to an AIError instance.
+ */
+const createApiError = async (response: Response): Promise<AIError> => {
+    const errorBody = await response.json().catch(() => ({ message: response.statusText }));
+    const serverMessage = errorBody.message;
+
+    let errorMessage: string;
+    let errorType: 'api_key' | 'network' | 'generic' = 'network';
+
+    switch (response.status) {
+        case 400:
+            errorMessage = serverMessage || 'The request was invalid. Please check your input.';
+            errorType = 'generic';
+            break;
+        case 401:
+            errorMessage = serverMessage || 'Authentication failed. Please log in again.';
+            errorType = 'api_key';
+            break;
+        case 403:
+            errorMessage = serverMessage || "You don't have permission to perform this action.";
+            errorType = 'api_key';
+            break;
+        case 404:
+            errorMessage = serverMessage || 'The requested resource was not found.';
+            break;
+        case 500:
+            errorMessage = serverMessage || 'An unexpected error occurred on the server. Please try again later.';
+            break;
+        case 502:
+        case 503:
+        case 504:
+            errorMessage = serverMessage || 'The server is temporarily unavailable. Please try again in a few moments.';
+            break;
+        default:
+            errorMessage = serverMessage || `An unknown error occurred (Status: ${response.status}).`;
+            break;
+    }
+    return new AIError(errorMessage, errorType);
+};
+
+
+/**
  * A generic, centralized request handler for all API calls.
  * - Automatically adds the JWT authorization header.
  * - Handles JSON and FormData content types.
@@ -27,15 +72,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
 
     if (!response.ok) {
-        const errorBody = await response.json().catch(() => ({ message: response.statusText }));
-        const errorMessage = errorBody.message || 'An unknown network error occurred.';
-        switch (response.status) {
-            case 401:
-            case 403:
-                throw new AIError(errorMessage, 'api_key');
-            default:
-                throw new AIError(errorMessage, 'network');
-        }
+        throw await createApiError(response);
     }
 
     if (response.status === 204) { // No Content
@@ -78,8 +115,7 @@ async function* stream(endpoint: string, body: Record<string, any>): AsyncGenera
     });
 
     if (!response.ok || !response.body) {
-        const errorBody = await response.json().catch(() => ({ message: response.statusText }));
-        throw new AIError(errorBody.message || 'Streaming failed.', 'network');
+        throw await createApiError(response);
     }
     
     // Use the modern and efficient Streams API for decoding
@@ -128,8 +164,39 @@ function postWithProgress(
                 } catch (e) {
                     errorBody = { message: xhr.statusText };
                 }
-                const errorMessage = errorBody.message || 'An unknown network error occurred.';
-                reject(new AIError(errorMessage, 'network'));
+                const serverMessage = errorBody.message;
+                let errorMessage: string;
+                let errorType: 'api_key' | 'network' | 'generic' = 'network';
+
+                switch (xhr.status) {
+                    case 400:
+                        errorMessage = serverMessage || 'The request was invalid. Please check your input.';
+                        errorType = 'generic';
+                        break;
+                    case 401:
+                        errorMessage = serverMessage || 'Authentication failed. Please log in again.';
+                        errorType = 'api_key';
+                        break;
+                    case 403:
+                        errorMessage = serverMessage || "You don't have permission to perform this action.";
+                        errorType = 'api_key';
+                        break;
+                    case 404:
+                        errorMessage = serverMessage || 'The requested resource was not found.';
+                        break;
+                    case 500:
+                        errorMessage = serverMessage || 'An unexpected error occurred on the server. Please try again later.';
+                        break;
+                    case 502:
+                    case 503:
+                    case 504:
+                        errorMessage = serverMessage || 'The server is temporarily unavailable. Please try again in a few moments.';
+                        break;
+                    default:
+                        errorMessage = serverMessage || `An unknown error occurred (Status: ${xhr.status}).`;
+                        break;
+                }
+                reject(new AIError(errorMessage, errorType));
             }
         };
 
@@ -176,8 +243,7 @@ export const apiClient = {
             headers,
         });
         if (!response.ok) {
-            const errorBody = await response.json().catch(() => ({ message: response.statusText }));
-            throw new AIError(errorBody.message || 'Request failed', 'network');
+            throw await createApiError(response);
         }
         return response.text();
     },
