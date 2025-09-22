@@ -2,11 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/assets/icon-192x192.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>AI Conversational Analysis Platform</title>
-    <meta name="theme-color" content="#1f2937" />
+    <meta name="description" content="A secure web platform for advanced conversational analysis with an AI, featuring automated video transcription and intelligent contextual chat." />
+
+    <link rel="icon" type="image/svg+xml" href="/assets/icon-192x192.svg" />
     <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1f2937" />
   <script type="importmap">
 {
   "imports": {
@@ -16,8 +19,8 @@
     "jspdf": "https://aistudiocdn.com/jspdf@^3.0.3",
     "jspdf-autotable": "https://aistudiocdn.com/jspdf-autotable@^5.0.2",
     "vite": "https://aistudiocdn.com/vite@^7.1.7",
-    "process": "https://aistudiocdn.com/process@^0.11.10",
     "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.0.3",
+    "process": "https://aistudiocdn.com/process@^0.11.10",
     "vite-plugin-pwa": "https://aistudiocdn.com/vite-plugin-pwa@^1.0.3",
     "vite-plugin-svgr": "https://aistudiocdn.com/vite-plugin-svgr@^4.5.0",
     "react-dom": "https://aistudiocdn.com/react-dom@^19.1.1"
@@ -26,9 +29,10 @@
 </script>
 </head>
   <body class="bg-gray-900 text-gray-200">
+    <!-- The root element where the React application will be mounted -->
     <div id="root"></div>
+
+    <!-- The main entry point for the application. Vite will bundle all necessary JavaScript and CSS into this module. -->
     <script type="module" src="/index.tsx"></script>
-    <!-- Service worker is now injected by vite-plugin-pwa -->
-    <!-- PDF libraries are now bundled via NPM -->
   </body>
 </html>
