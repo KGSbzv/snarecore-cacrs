@@ -4,6 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 // FIX: Explicitly import 'process' to provide correct types for `process.cwd()`
 // and resolve "Property 'cwd' does not exist on type 'Process'" error.
 import process from 'process';
+import svgr from 'vite-plugin-svgr';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -14,6 +15,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
+      svgr(),
       VitePWA({
         registerType: 'autoUpdate',
         injectRegister: 'script',
