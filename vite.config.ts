@@ -1,4 +1,6 @@
-/// <reference types="node" />
+// FIX: Removed the triple-slash directive for "node" types.
+// The explicit `import process from 'process'` is sufficient and this directive
+// was causing an error because @types/node might not be available in the environment.
 
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -9,12 +11,12 @@ import process from 'process';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Load env file based on `mode` in the current working directory.
-  // The third parameter '' makes it load all env vars, not just VITE_ prefixed ones.
-  const env = loadEnv(mode, process.cwd(), '');
+  // Load .env files and merge with process.env.
+  // process.env will overwrite values from .env files, which is the desired behavior for production environments.
+  const env = { ...loadEnv(mode, process.cwd(), ''), ...process.env };
   
-  // Explicitly read the PORT from the environment for server configuration.
-  const port = Number(process.env.PORT) || 8080;
+  // Explicitly read the PORT from the merged environment for server configuration.
+  const port = Number(env.PORT) || 8080;
 
   return {
     plugins: [
@@ -31,7 +33,7 @@ export default defineConfig(({ mode }) => {
     // Make process.env variables available in client-side code.
     // This is crucial for fixing crashes caused by accessing environment variables.
     define: {
-      'process.env.VITE_API_BASE_URL': JSON.stringify(env.VITE_API_BASE_URL),
+      'process.env.VITE_API_BASE_URL': JSON.stringify(env.VITE_API_BASE_URL || ''),
     },
     server: {
       host: '0.0.0.0', // Listen on all network interfaces
