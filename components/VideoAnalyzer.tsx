@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { analyzeVideoWithAI } from '../services/aiService';
-import type { VideoAnalysisResult, VideoAnalysisHistoryItem, VideoMetadata } from '../types';
+import type { VideoAnalysisResult, VideoAnalysisHistoryItem, VideoMetadata, TranscriptionSegment } from '../types';
 import { UploadIcon } from './icons/UploadIcon';
 import { LoaderIcon } from './icons/LoaderIcon';
 import { TranscriptionViewer } from './TranscriptionViewer';
@@ -18,6 +18,7 @@ import { LinkIcon } from './icons/LinkIcon';
 import { DatabaseIcon } from './icons/DatabaseIcon';
 import { ChevronDownIcon } from './icons/ChevronDownIcon';
 import { validateVideoUrl } from '../utils/validation';
+import { PencilLineIcon } from './icons/PencilLineIcon';
 
 export const VideoAnalyzer: React.FC = () => {
     const [inputType, setInputType] = useState<'upload' | 'url'>('upload');
@@ -33,6 +34,8 @@ export const VideoAnalyzer: React.FC = () => {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [videoMetadata, setVideoMetadata] = useState<VideoMetadata | null>(null);
     const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+    const [showManualTranscriptInput, setShowManualTranscriptInput] = useState(false);
+    const [manualTranscript, setManualTranscript] = useState('');
     
     const { aiConfig } = useAppContext();
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -150,11 +153,19 @@ export const VideoAnalyzer: React.FC = () => {
                 sourceType = 'url';
             }
             
+            const isManualTranscriptProvided = showManualTranscriptInput && manualTranscript.trim();
+            let finalPrompt = prompt;
+
+            if (isManualTranscriptProvided) {
+                const instruction = `The user has provided a manual transcription for this video. Use this transcription as the ground truth for your analysis. DO NOT generate a new transcription from the audio. Based on the provided text, perform the analysis requested by the user.`;
+                finalPrompt = `${instruction}\n\nUser Request: "${prompt}"\n\nProvided Transcription:\n${manualTranscript}`;
+            }
+
             // Common logic for making the API call and processing the result
             const resultString = await analyzeVideoWithAI(
                 'gemini', 
                 source, 
-                prompt, 
+                finalPrompt, 
                 aiConfig.gemini,
                 inputType === 'upload' ? {
                     onProgress: setUploadProgress,
@@ -164,6 +175,13 @@ export const VideoAnalyzer: React.FC = () => {
 
             const result: VideoAnalysisResult = JSON.parse(resultString);
             
+            if (isManualTranscriptProvided) {
+                result.transcription = manualTranscript
+                    .split('\n')
+                    .filter(line => line.trim() !== '')
+                    .map(line => ({ text: line, start: 0, end: 0 }));
+            }
+
             setAnalysisResult(result);
 
             const newHistoryItem: VideoAnalysisHistoryItem = {
@@ -173,6 +191,7 @@ export const VideoAnalyzer: React.FC = () => {
                 timestamp: Date.now(),
                 result,
                 metadata: sourceType === 'upload' ? videoMetadata : null,
+                manualTranscript: isManualTranscriptProvided ? manualTranscript : undefined,
             };
             setHistory(prev => [newHistoryItem, ...prev]);
 
@@ -209,6 +228,14 @@ export const VideoAnalyzer: React.FC = () => {
         setUrlError(validateVideoUrl(url)); // Re-validate historical URL
         setInputType(item.sourceType);
         setVideoMetadata(item.metadata || null);
+        
+        if (item.manualTranscript) {
+            setShowManualTranscriptInput(true);
+            setManualTranscript(item.manualTranscript);
+        } else {
+            setShowManualTranscriptInput(false);
+            setManualTranscript('');
+        }
     }
     
     const clearHistory = () => {
@@ -320,6 +347,30 @@ export const VideoAnalyzer: React.FC = () => {
                                 />
                             </div>
                         </div>
+                        
+                        <div className="mt-4 border-t border-border pt-4">
+                            <button type="button" onClick={() => setShowManualTranscriptInput(prev => !prev)} className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-white">
+                                <PencilLineIcon className="w-5 h-5" />
+                                <span>{showManualTranscriptInput ? 'Hide' : 'Provide'} Manual Transcription</span>
+                                <ChevronDownIcon className={`w-4 h-4 transition-transform ${showManualTranscriptInput ? 'rotate-180' : ''}`} />
+                            </button>
+                            {showManualTranscriptInput && (
+                                <div className="mt-3 animate-fade-in-up">
+                                    <label htmlFor="manual-transcript" className="block text-sm font-medium text-text-secondary mb-2">
+                                        Transcription Text
+                                    </label>
+                                    <textarea
+                                        id="manual-transcript"
+                                        rows={6}
+                                        className="w-full bg-background border border-border rounded-lg text-white p-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                                        value={manualTranscript}
+                                        onChange={(e) => setManualTranscript(e.target.value)}
+                                        placeholder="Paste or type the full video transcription here. Each line will be treated as a separate segment."
+                                    />
+                                </div>
+                            )}
+                        </div>
+
                         <div className="mt-4 flex justify-end">
                             <button
                                 onClick={handleAnalysis}

@@ -48,6 +48,7 @@ export interface VideoAnalysisHistoryItem {
   timestamp: number;
   result: VideoAnalysisResult;
   metadata?: VideoMetadata | null;
+  manualTranscript?: string;
 }
 
 export interface VideoMetadata {

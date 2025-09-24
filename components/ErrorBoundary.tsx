@@ -10,9 +10,13 @@ interface State {
 }
 
 class ErrorBoundary extends Component<Props, State> {
-  // FIX: Removed 'public' access modifiers. These are often redundant for React component lifecycle methods and properties,
-  // and their removal can resolve typing issues in some toolchains, like the error regarding 'this.props'.
-  state: State = { hasError: false };
+  // FIX: Reverted to using a constructor for state initialization. The class property
+  // initializer syntax was causing a TypeScript error where 'this.props' was not
+  // recognized on the component instance. The constructor approach resolves this.
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
   static getDerivedStateFromError(_: Error): State {
     // Update state so the next render will show the fallback UI.

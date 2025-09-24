@@ -1,7 +1,10 @@
 import { AIError } from "../types";
 
-// FIX: Cast `import.meta` to `any` to access Vite environment variables without TypeScript errors.
-const API_BASE_URL = (import.meta as any).env.VITE_API_BASE_URL || '';
+// This global constant is replaced by Vite's `define` config during the build process.
+// It holds the value of the VITE_API_BASE_URL environment variable.
+declare const __API_BASE_URL__: string;
+const API_BASE_URL = __API_BASE_URL__ || '';
+
 const TOKEN_KEY = 'authToken';
 
 /**
