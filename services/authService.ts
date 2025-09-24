@@ -36,6 +36,10 @@ export const authService = {
         }
     },
 
+    updateProfile(data: { name: string; avatar?: File }): Promise<User> {
+        return apiClient.putFormData<User>('/api/auth/profile', data);
+    },
+
     // Admin user functions
     getUsers(): Promise<User[]> {
         return apiClient.get<User[]>('/api/admin/users');

@@ -5,6 +5,7 @@ import { MessageSquareIcon } from './icons/MessageSquareIcon';
 import { VideoIcon } from './icons/VideoIcon';
 import { ShieldIcon } from './icons/ShieldIcon';
 import { DownloadCloudIcon } from './icons/DownloadCloudIcon';
+import { UserIcon } from './icons/UserIcon';
 
 interface SidebarProps {
   currentView: View;
@@ -63,6 +64,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             label="Video Analysis"
             isActive={currentView === 'video'}
             onClick={() => setCurrentView('video')}
+          />
+          <NavItem
+            icon={<UserIcon />}
+            label="Profile"
+            isActive={currentView === 'profile'}
+            onClick={() => setCurrentView('profile')}
           />
           {currentUser?.role === 'ADMIN' && (
             <NavItem

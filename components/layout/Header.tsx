@@ -58,9 +58,13 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView }) =
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                         className="flex items-center gap-2"
                     >
-                         <div className="w-9 h-9 rounded-full bg-background flex items-center justify-center font-bold text-lg text-primary border-2 border-primary/50">
-                            {currentUser?.name.charAt(0)}
-                        </div>
+                        {currentUser?.avatarUrl ? (
+                            <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-9 h-9 rounded-full object-cover border-2 border-border" />
+                        ) : (
+                            <div className="w-9 h-9 rounded-full bg-background flex items-center justify-center font-bold text-lg text-primary border-2 border-primary/50">
+                                {currentUser?.name.charAt(0).toUpperCase()}
+                            </div>
+                        )}
                         <span className="hidden md:block font-semibold">{currentUser?.name}</span>
                         <ChevronDownIcon className={`w-5 h-5 text-text-secondary transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>

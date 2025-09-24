@@ -10,15 +10,16 @@ interface State {
 }
 
 class ErrorBoundary extends Component<Props, State> {
-  // FIX: Initialize state as a class property to resolve typing errors.
-  public state: State = { hasError: false };
+  // FIX: Removed 'public' access modifiers. These are often redundant for React component lifecycle methods and properties,
+  // and their removal can resolve typing issues in some toolchains, like the error regarding 'this.props'.
+  state: State = { hasError: false };
 
-  public static getDerivedStateFromError(_: Error): State {
+  static getDerivedStateFromError(_: Error): State {
     // Update state so the next render will show the fallback UI.
     return { hasError: true };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // You can also log the error to an error reporting service
     console.error("Uncaught error:", error, errorInfo);
   }
@@ -28,7 +29,7 @@ class ErrorBoundary extends Component<Props, State> {
     window.location.reload();
   };
 
-  public render() {
+  render() {
     if (this.state.hasError) {
       return <ErrorFallback onReset={this.handleReset} />;
     }

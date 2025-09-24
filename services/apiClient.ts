@@ -231,6 +231,13 @@ export const apiClient = {
     put: <T>(endpoint: string, data: any) => request<T>(endpoint, { method: 'PUT', body: JSON.stringify(data) }),
     delete: <T>(endpoint: string) => request<T>(endpoint, { method: 'DELETE' }),
     
+    putFormData: <T>(endpoint: string, data: Record<string, any>): Promise<T> => {
+        return request<T>(endpoint, {
+            method: 'PUT',
+            body: buildFormData(data),
+        });
+    },
+
     postFormData: async (endpoint: string, body: Record<string, any>): Promise<string> => {
         const headers = new Headers();
         const token = localStorage.getItem(TOKEN_KEY);

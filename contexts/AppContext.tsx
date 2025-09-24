@@ -41,6 +41,7 @@ interface AppContextType {
     logout: () => void;
     saveAIConfig: (config: AIConfiguration) => Promise<void>;
     saveTranscriptionConfig: (config: TranscriptionConfig) => Promise<void>;
+    updateCurrentUserProfile: (data: { name: string; avatar?: File }) => Promise<void>;
     updateUser: (user: User) => Promise<void>;
     addUser: (user: Omit<User, 'id'>) => Promise<void>;
     deleteUser: (userId: string) => Promise<void>;
@@ -109,6 +110,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setTranscriptionConfig(updatedConfig);
     }, []);
 
+    const updateCurrentUserProfile = useCallback(async (data: { name: string; avatar?: File }) => {
+        const updatedUser = await authService.updateProfile(data);
+        setCurrentUser(updatedUser);
+        // also update the user in the admin list if applicable
+        setUsers(prevUsers => prevUsers.map(u => u.id === updatedUser.id ? updatedUser : u));
+    }, []);
+
     const updateUser = useCallback(async (user: User) => {
         await authService.updateUser(user);
         if (user.id === currentUser?.id) {
@@ -137,10 +145,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         logout,
         saveAIConfig,
         saveTranscriptionConfig,
+        updateCurrentUserProfile,
         updateUser,
         addUser,
         deleteUser
-    }), [currentUser, isLoadingUser, users, aiConfig, transcriptionConfig, login, logout, saveAIConfig, saveTranscriptionConfig, updateUser, addUser, deleteUser]);
+    }), [currentUser, isLoadingUser, users, aiConfig, transcriptionConfig, login, logout, saveAIConfig, saveTranscriptionConfig, updateCurrentUserProfile, updateUser, addUser, deleteUser]);
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
