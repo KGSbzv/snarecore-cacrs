@@ -1,9 +1,6 @@
 import { AIError } from "../types";
 
-// This global constant is replaced by Vite's `define` config during the build process.
-// It holds the value of the VITE_API_BASE_URL environment variable.
-declare const __API_BASE_URL__: string;
-const API_BASE_URL = __API_BASE_URL__ || '';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const TOKEN_KEY = 'authToken';
 
