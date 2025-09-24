@@ -16,11 +16,8 @@ export default defineConfig({
       },
     })
   ],
-  // Make process.env variables available in client-side code.
-  // The `process` object is globally available in the Node.js environment where this config is run.
-  define: {
-    'process.env.VITE_API_BASE_URL': JSON.stringify(process.env.VITE_API_BASE_URL || ''),
-  },
+  // The 'define' block has been removed. Vite automatically handles env vars prefixed with VITE_
+  // and exposes them on `import.meta.env`.
   server: {
     host: '0.0.0.0', // Listen on all network interfaces
     port: Number(process.env.PORT) || 5173,

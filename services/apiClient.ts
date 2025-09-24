@@ -1,6 +1,7 @@
 import { AIError } from "../types";
 
-const API_BASE_URL = process.env.VITE_API_BASE_URL || '';
+// FIX: Cast `import.meta` to `any` to access Vite environment variables without TypeScript errors.
+const API_BASE_URL = (import.meta as any).env.VITE_API_BASE_URL || '';
 const TOKEN_KEY = 'authToken';
 
 /**
